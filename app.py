@@ -9,7 +9,7 @@ from spotipy.oauth2 import SpotifyClientCredentials
 drive_link = "https://drive.google.com/uc?id=1FMLaMc0eZSgfBCvm6f_SUTAksPXoDU5u"
 similarity_file = "similarity.pkl"
 
-# Download the file if it doesn't exist
+# Ensure the file is downloaded only once
 if not os.path.exists(similarity_file):
     st.info("Downloading similarity file from Google Drive...")
     gdown.download(drive_link, similarity_file, quiet=False)
