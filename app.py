@@ -46,6 +46,9 @@ def recommend(song):
     return recommended_music_names, recommended_music_posters
 
 # --- Streamlit UI ---
+
+# Load image
+st.image("dataset-cover.png")
 st.header('Music Recommender System')
 
 # Load Data
