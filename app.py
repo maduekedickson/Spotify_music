@@ -1,25 +1,25 @@
 import pickle
 import streamlit as st
 import spotipy
-from spotipy.oauth2 import SpotifyClientCredentials
 import gdown
 import os
+from spotipy.oauth2 import SpotifyClientCredentials
 
+# --- Google Drive File Download ---
+drive_link = "https://drive.google.com/uc?id=1FMLaMc0eZSgfBCvm6f_SUTAksPXoDU5u"
+similarity_file = "similarity.pkl"
+
+# Download the file if it doesn't exist
+if not os.path.exists(similarity_file):
+    st.info("Downloading similarity file from Google Drive...")
+    gdown.download(drive_link, similarity_file, quiet=False)
+
+# --- Spotify API Setup ---
 CLIENT_ID = "c08ada171c2d4ed099cd1c6d354e10d9"
 CLIENT_SECRET = "a27579e704d749658d31808b4cbcff75"
 
-# Initialize the Spotify client
 client_credentials_manager = SpotifyClientCredentials(client_id=CLIENT_ID, client_secret=CLIENT_SECRET)
 sp = spotipy.Spotify(client_credentials_manager=client_credentials_manager)
-
-# Google Drive File ID for similarity
-file_id = "1FMLaMc0eZSgfBCvm6f_SUTAksPXoDU5u"  # Replace with your actual file ID
-output = "similarity.pkl"
-
-# Download the file if it doesn't exist
-if not os.path.exists(output):
-    url = f"https://drive.google.com/uc?id={file_id}"
-    gdown.download(url, output, quiet=False)
 
 def get_song_album_cover_url(song_name, artist_name):
     search_query = f"track:{song_name} artist:{artist_name}"
@@ -28,7 +28,6 @@ def get_song_album_cover_url(song_name, artist_name):
     if results and results["tracks"]["items"]:
         track = results["tracks"]["items"][0]
         album_cover_url = track["album"]["images"][0]["url"]
-        print(album_cover_url)
         return album_cover_url
     else:
         return "https://i.postimg.cc/0QNxYz4V/social.png"
@@ -38,44 +37,29 @@ def recommend(song):
     distances = sorted(list(enumerate(similarity[index])), reverse=True, key=lambda x: x[1])
     recommended_music_names = []
     recommended_music_posters = []
+
     for i in distances[1:6]:
         artist = music.iloc[i[0]].artist
-        print(artist)
-        print(music.iloc[i[0]].song)
         recommended_music_posters.append(get_song_album_cover_url(music.iloc[i[0]].song, artist))
         recommended_music_names.append(music.iloc[i[0]].song)
 
     return recommended_music_names, recommended_music_posters
 
+# --- Streamlit UI ---
 st.header('Music Recommender System')
 
-# Load the music dataframe
-music = pickle.load(open('df', 'rb'))
-
-# Load the similarity matrix
-similarity = pickle.load(open(output, 'rb'))
+# Load Data
+music = pickle.load(open('df.pkl', 'rb'))
+similarity = pickle.load(open(similarity_file, 'rb'))
 
 music_list = music['song'].values
-selected_movie = st.selectbox(
-    "Type or select a song from the dropdown",
-    music_list
-)
+selected_song = st.selectbox("Type or select a song from the dropdown", music_list)
 
 if st.button('Show Recommendation'):
-    recommended_music_names, recommended_music_posters = recommend(selected_movie)
-    col1, col2, col3, col4, col5 = st.columns(5)
-    with col1:
-        st.text(recommended_music_names[0])
-        st.image(recommended_music_posters[0])
-    with col2:
-        st.text(recommended_music_names[1])
-        st.image(recommended_music_posters[1])
-    with col3:
-        st.text(recommended_music_names[2])
-        st.image(recommended_music_posters[2])
-    with col4:
-        st.text(recommended_music_names[3])
-        st.image(recommended_music_posters[3])
-    with col5:
-        st.text(recommended_music_names[4])
-        st.image(recommended_music_posters[4])
+    recommended_music_names, recommended_music_posters = recommend(selected_song)
+    cols = st.columns(5)
+
+    for i in range(5):
+        with cols[i]:
+            st.text(recommended_music_names[i])
+            st.image(recommended_music_posters[i])
