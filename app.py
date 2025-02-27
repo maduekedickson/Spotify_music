@@ -49,7 +49,7 @@ def recommend(song):
 st.header('Music Recommender System')
 
 # Load Data
-music = pickle.load(open('df.pkl', 'rb'))
+music = pickle.load(open('df', 'rb'))
 similarity = pickle.load(open(similarity_file, 'rb'))
 
 music_list = music['song'].values
